@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat with AI</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/github-dark-dimmed.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <!-- Chat Page -->
+    <div id="chat-page">
+      <div id="current-llm"></div>
+      <div class="chat-container" id="chat"></div>
+
+      <div class="input-area">
+        <div class="input-wrapper">
+          <button id="add-llm-btn">Add LLM</button>
+          <button id="clear-context">Clear Context</button>
+          <input
+            type="text"
+            id="message-input"
+            placeholder="Ask anything..."
+            autocomplete="off"
+          />
+          <button id="send-btn" disabled>➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add LLM Page -->
+    <div id="add-llm-page">
+      <h2 style="text-align: center; margin-bottom: 2rem">Add New LLM</h2>
+
+      <div
+        style="
+          background: rgba(255, 193, 7, 0.15);
+          border: 1px solid #ffc107;
+          color: #ffecb3;
+          padding: 1rem;
+          border-radius: 0.6rem;
+          margin-bottom: 1.5rem;
+          font-size: 0.95rem;
+          line-height: 1.4;
+          width: 50rem;
+          margin: 0 auto 1.5rem;
+          text-align: center;
+        "
+      >
+        <strong>Important Security Notice:</strong><br />
+        Your API keys will be stored
+        <strong>locally in your browser</strong> (using localStorage).<br />
+        <strong>Do NOT use this on shared, public, or untrusted devices.</strong
+        ><br />
+        Anyone with access to this browser can see and use your saved API keys.
+      </div>
+
+      <form class="add-form">
+        <input
+          type="text"
+          id="model-name"
+          placeholder="Model Name (e.g., gpt-4)"
+          required
+        />
+        <input
+          type="url"
+          id="endpoint-url"
+          placeholder="Endpoint URL (e.g., https://api.openai.com/v1/chat/completions)"
+          required
+        />
+        <input type="text" id="api-key" placeholder="API Key" required />
+        <div class="form-actions">
+          <button type="button" id="save-llm">Save</button>
+          <button type="button" id="cancel-add">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- LLM Management Modal -->
+    <div id="llm-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Manage LLMs</h2>
+          <button class="close-btn" id="close-modal">&times;</button>
+        </div>
+        <div class="llm-list" id="llm-list"></div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-left: 20px;
+            padding-right: 20px;
+          "
+        >
+          <button id="add-new-btn">Add New LLM</button>
+          <button id="clear-storage">Clear Saved Credentials</button>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
