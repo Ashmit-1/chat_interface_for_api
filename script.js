@@ -315,6 +315,8 @@ async function sendMessage() {
             if (done) break
 
             const chunk = decoder.decode(value, { stream: true })
+            console.log(chunk);
+            
             const lines = chunk.split("\n").filter(Boolean)
 
                 for (const line of lines) {
@@ -339,57 +341,45 @@ async function sendMessage() {
         }
         else{
 
-            const response = await fetch(endpoint, {
+            const response = await fetch("http://127.0.0.1:8000/chat/stream", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
+                    endpoint:endpoint,
+                    api_key: apiKey,
                     model: model,
-                    messages: messagesToSend,
-                    stream: true                    
+                    messages: messagesToSend,                   
                 })
             });
     
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
-            }         
-    
+            }
+            
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-    
+
+            // let buffer = "";
+            let textNode = document.createTextNode("");
+            contentDiv.innerHTML = "";
+            contentDiv.appendChild(textNode);
+
+            let text = "";
+            
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-    
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n').filter(Boolean);
-    
-                for (const line of lines) {
-                    if (line.trim() === '') continue;
-                    if (!line.startsWith('data: ')) continue;
-    
-                    const data = line.slice(6); // remove "data: "
-    
-                    if (data === '[DONE]') continue;
-    
-                    try {
-                        const parsed = JSON.parse(data);
-                        const token = parsed.choices?.[0]?.delta?.content || '';
-                        if (token) {
-                            accumulated += token;
-                            contentDiv.innerHTML = marked.parse(accumulated, { breaks: true, gfm: true });
-                            chat.scrollTop = chat.scrollHeight;
-                        }
-                    } catch (e) {
-                        // some providers send malformed json or comments
-                        console.debug('Skipping parse error:', e);
-                    }
-                }
+                text += decoder.decode(value);
+                textNode.textContent = text;
+                chat.scrollTop = chat.scrollHeight;
             }
-            // console.log(accumulated);
             
+            // after stream ends
+            contentDiv.innerHTML = marked.parse(text);
+            chat.scrollTop = chat.scrollHeight;
+                    
         }
         hljs.highlightAll();
         // Add user message to history
