@@ -279,62 +279,117 @@ async function sendMessage() {
 
     // Prepare messages with context
     const messagesToSend = [
-        ...conversationHistory.slice(-4),          // last 10 messages (5 user + 5 assistant)
+        ...conversationHistory.slice(-4),          // last 4 messages (2 user + 2 assistant)
         { role: "user", content: text }
     ];
 
     try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: messagesToSend,
-                stream: true                     
-            })
-        });
+        let accumulated = "";
 
-        if (!response.ok) {
-            console.log(response)
-            throw new Error(`HTTP ${response.status}`);
-        }
+        if (endpoint == "http://localhost:11434/api/chat"){
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messagesToSend,
+                    stream: true                    
+                })
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
 
-        let accumulated = '';
+            const reader = response.body.getReader()
+            const decoder = new TextDecoder()
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+            
 
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
+            while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
 
-            for (const line of lines) {
-                if (line.trim() === '') continue;
-                if (!line.startsWith('data: ')) continue;
+            const chunk = decoder.decode(value, { stream: true })
+            const lines = chunk.split("\n").filter(Boolean)
 
-                const data = line.slice(6); // remove "data: "
+                for (const line of lines) {
+                    try {
+                    const parsed = JSON.parse(line)
 
-                if (data === '[DONE]') continue;
-
-                try {
-                    const parsed = JSON.parse(data);
-                    const token = parsed.choices?.[0]?.delta?.content || '';
-                    if (token) {
-                        accumulated += token;
-                        contentDiv.innerHTML = marked.parse(accumulated, { breaks: true, gfm: true });
-                        chat.scrollTop = chat.scrollHeight;
+                    if (parsed.done) {
+                        continue
                     }
-                } catch (e) {
-                    // some providers send malformed json or comments
-                    console.debug('Skipping parse error:', e);
+
+                    const token = parsed.message?.content
+                    if (token) {
+                        accumulated += token
+                        contentDiv.innerHTML = marked.parse(accumulated, { breaks: true, gfm: true })
+                        chat.scrollTop = chat.scrollHeight
+                    }
+                    } catch (e) {
+                    console.debug("Skipping malformed chunk:", line)
+                    }
                 }
             }
+        }
+        else{
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messagesToSend,
+                    stream: true                    
+                })
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }         
+    
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+    
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+    
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(Boolean);
+    
+                for (const line of lines) {
+                    if (line.trim() === '') continue;
+                    if (!line.startsWith('data: ')) continue;
+    
+                    const data = line.slice(6); // remove "data: "
+    
+                    if (data === '[DONE]') continue;
+    
+                    try {
+                        const parsed = JSON.parse(data);
+                        const token = parsed.choices?.[0]?.delta?.content || '';
+                        if (token) {
+                            accumulated += token;
+                            contentDiv.innerHTML = marked.parse(accumulated, { breaks: true, gfm: true });
+                            chat.scrollTop = chat.scrollHeight;
+                        }
+                    } catch (e) {
+                        // some providers send malformed json or comments
+                        console.debug('Skipping parse error:', e);
+                    }
+                }
+            }
+            // console.log(accumulated);
+            
         }
         hljs.highlightAll();
         // Add user message to history
@@ -387,10 +442,14 @@ const model = modelNameInput.value.trim();
 const endpoint = endpointUrlInput.value.trim();
 const apiKey = apiKeyInput.value.trim();
 
-if (!model || !endpoint || !apiKey) {
+if (!model || !endpoint ) {
     alert("Please fill all fields.");
     return;
 }
+// if (!model || !endpoint || !apiKey) {
+//     alert("Please fill all fields.");
+//     return;
+// }
 
 llms.push({ model, endpoint, apiKey });
 saveLLMs();
