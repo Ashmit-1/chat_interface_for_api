@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import json
 from openai import AsyncOpenAI
+from ollama import Client
+import asyncio
 
 
 
@@ -36,6 +38,36 @@ app.add_middleware(
 
 
 # ---------- Streaming Generator ----------
+async def stream_llm_response(payload : Payload):
+    if "ollama" in str(payload.endpoint):
+        client = Client(
+            host="https://ollama.com",
+            headers={'Authorization': 'Bearer ' + str(payload.api_key)}
+        )
+        messages=[m.model_dump() for m in payload.messages]
+
+        loop = asyncio.get_event_loop()
+        stream = await loop.run_in_executor(None, client.chat(model=payload.model, messages=messages, stream=True))
+        for part in stream:
+            print(part['message']['content'], end='', flush=True)
+            yield part["message"]["content"]
+
+        pass
+    else:
+        client = AsyncOpenAI(base_url=str(payload.endpoint), api_key=payload.api_key)
+        stream = await client.chat.completions.create(
+                model=payload.model,
+                messages=[m.model_dump() for m in payload.messages],
+                stream=True,
+            )
+
+        async for chunk in stream:
+            # if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+            if chunk.choices:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    yield delta.content
+            
 
 
 async def stream_llm_response_v1(payload: Payload):
@@ -132,5 +164,10 @@ async def stream_llm_response_v1(payload: Payload):
 async def chat(payload: Payload):
     return StreamingResponse(
         stream_llm_response(payload),
-        media_type="text/plain"
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable buffering in nginx
+        }
     )
