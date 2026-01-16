@@ -57,55 +57,120 @@ document.getElementById('clear-storage').addEventListener('click', () => {
 });
 
 function updateCurrentDisplay() {
-if (currentLLM !== null) {
-    currentLlmDisplay.textContent = `Chatting with: ${llms[currentLLM].model}`;
-} else {
-    currentLlmDisplay.textContent = "No LLM selected. Add one to start.";
-}
+    if (currentLLM !== null) {
+        currentLlmDisplay.textContent = `Chatting with: ${llms[currentLLM].model}`;
+    } else {
+        currentLlmDisplay.textContent = "No LLM selected. Add one to start.";
+    }
 }
 
 function renderLlmList() {
-llmList.innerHTML = "";
-llms.forEach((llm, index) => {
-    const item = document.createElement("div");
-    item.classList.add("llm-item");
+    llmList.innerHTML = "";
+    llms.forEach((llm, index) => {
+        const item = document.createElement("div");
+        item.classList.add("llm-item");
 
-    const info = document.createElement("div");
-    info.classList.add("llm-info");
-    const name = document.createElement("div");
-    name.classList.add("llm-name");
-    name.textContent = llm.model;
-    const endpoint = document.createElement("div");
-    endpoint.classList.add("llm-endpoint");
-    const MAX_VISIBLE = 45; // adjust this number as you prefer
+        const info = document.createElement("div");
+        info.classList.add("llm-info");
+        const name = document.createElement("div");
+        name.classList.add("llm-name");
+        name.textContent = llm.model;
+        const endpoint = document.createElement("div");
+        endpoint.classList.add("llm-endpoint");
+        const MAX_VISIBLE = 15; // adjust this number as you prefer
 
-    if (llm.endpoint.length > MAX_VISIBLE + 10) {
-        const start = llm.endpoint.substring(0, 22);
-        const end = llm.endpoint.substring(llm.endpoint.length - 18);
-        endpoint.textContent = start + '...' + end;
-        endpoint.title = llm.endpoint; // full url on hover
-    } else {
-        endpoint.textContent = llm.endpoint;
-    }
-    info.appendChild(name);
-    info.appendChild(endpoint);
+        if (llm.endpoint.length > MAX_VISIBLE + 10) {
+            const start = llm.endpoint.substring(0, (MAX_VISIBLE / 2) - 1);
+            const end = llm.endpoint.substring(llm.endpoint.length - (MAX_VISIBLE / 2) - 4);
+            endpoint.textContent = start + '...' + end;
+            endpoint.title = llm.endpoint; // full url on hover
+        } else {
+            endpoint.textContent = llm.endpoint;
+        }
+        info.appendChild(name);
+        info.appendChild(endpoint);
 
-    const selectBtn = document.createElement("button");
-    selectBtn.textContent = currentLLM === index ? "Selected" : "Select";
-    selectBtn.disabled = currentLLM === index;
-    selectBtn.onclick = () => {
-    currentLLM = index;
-    updateCurrentDisplay();
-    renderLlmList();
-    llmModal.style.display = "none";
-    };
-    saveLLMs();
+        // --- Action Buttons Container ---
+        const actions = document.createElement("div");
+        actions.classList.add("llm-actions");
 
-    item.appendChild(info);
-    item.appendChild(selectBtn);
-    llmList.appendChild(item);
-});
+        const selectBtn = document.createElement("button");
+        selectBtn.textContent = currentLLM === index ? "Selected" : "Select";
+        selectBtn.disabled = currentLLM === index;
+        selectBtn.onclick = () => {
+            currentLLM = index;
+            updateCurrentDisplay();
+            renderLlmList();
+            llmModal.style.display = "none";
+        };
+        saveLLMs();
+
+        // Edit Button
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✏️";
+        editBtn.style.backgroundColor = "#ff4d4d00";
+        editBtn.onclick = () => editLLM(index);
+
+        // Delete Button
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "❌";
+        deleteBtn.style.backgroundColor = "#ff4d4d00"; // Optional: red color
+        deleteBtn.onclick = () => deleteLLM(index);
+
+        actions.appendChild(selectBtn);
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        item.appendChild(info);
+        item.appendChild(actions);
+        item.appendChild(selectBtn);
+        llmList.appendChild(item);
+    });
 }
+
+let editingIndex = null; // Track which LLM is being edited
+
+// Function to trigger Edit Mode
+function editLLM(index) {
+    editingIndex = index;
+    const llm = llms[index];
+
+    // Populate the inputs with existing data
+    modelNameInput.value = llm.model;
+    endpointUrlInput.value = llm.endpoint;
+    apiKeyInput.value = llm.apiKey;
+
+    // Change UI to the "Add/Edit" page
+    chatPage.style.display = "none";
+    addLlmPage.style.display = "block";
+
+    llmModal.style.display = "none";
+    chatPage.style.display = "none";
+    addLlmPage.style.display = "flex";
+    
+    // Optional: Change button text to "Update" instead of "Save"
+    saveLlmBtn.textContent = "Update LLM";
+}
+
+// Function to delete an LLM
+function deleteLLM(index) {
+    if (confirm(`Are you sure you want to delete ${llms[index].model}?`)) {
+        llms.splice(index, 1); // Remove from array
+        
+        // Handle current selection if the deleted one was selected
+        if (currentLLM === index) {
+            currentLLM = llms.length > 0 ? 0 : null;
+        } else if (currentLLM > index) {
+            currentLLM--; // Shift index down
+        }
+
+        saveLLMs();
+        renderLlmList();
+        updateCurrentDisplay();
+    }
+}
+
+
 
 function renderMarkdown(text) {
     // Convert markdown → HTML
@@ -186,13 +251,13 @@ if (loading) loading.parentElement.remove();
 }
 
 function showChatPage() {
-addLlmPage.style.display = "none";
-chatPage.style.display = "flex";
+    addLlmPage.style.display = "none";
+    chatPage.style.display = "flex";
 }
 
 function showAddLlmPage() {
-chatPage.style.display = "none";
-addLlmPage.style.display = "flex";
+    chatPage.style.display = "none";
+    addLlmPage.style.display = "flex";
 }
 
 // --- Main send logic ---
@@ -421,44 +486,54 @@ llmModal.style.display = "none";
 });
 
 addNewBtn.addEventListener("click", () => {
-llmModal.style.display = "none";
-chatPage.style.display = "block";
-addLlmPage.style.display = "flex";
-showAddLlmPage();
+    llmModal.style.display = "none";
+    chatPage.style.display = "block";
+    addLlmPage.style.display = "flex";
+    showAddLlmPage();
 });
 
 saveLlmBtn.addEventListener("click", () => {
-const model = modelNameInput.value.trim();
-const endpoint = endpointUrlInput.value.trim();
-const apiKey = apiKeyInput.value.trim();
+    const model = modelNameInput.value.trim();
+    const endpoint = endpointUrlInput.value.trim();
+    const apiKey = apiKeyInput.value.trim();
 
-if (!model || !endpoint ) {
-    alert("Please fill all fields.");
-    return;
-}
-// if (!model || !endpoint || !apiKey) {
-//     alert("Please fill all fields.");
-//     return;
-// }
+    if (!model || !endpoint || !apiKey) {
+        if (!endpoint.includes("localhost")){
+            alert("Please fill all fields.");
+            return;
+        }
+    }
 
-llms.push({ model, endpoint, apiKey });
-saveLLMs();
-if (currentLLM === null) currentLLM = llms.length - 1;
-updateCurrentDisplay();
+    const llmData = { model, endpoint, apiKey };
 
-modelNameInput.value = "";
-endpointUrlInput.value = "";
-apiKeyInput.value = "";
+    if (editingIndex !== null) {
+        // UPDATE existing
+        llms[editingIndex] = llmData;
+        editingIndex = null; // Reset edit mode
+        saveLlmBtn.textContent = "Save LLM"; // Reset button text
+    } else {
+        // ADD new
+        llms.push(llmData);
+        if (currentLLM === null) currentLLM = llms.length - 1;
+    }
 
-addLlmPage.style.display = "none";
-chatPage.style.display = "block";
-showChatPage();
+    saveLLMs();
+    updateCurrentDisplay();
+    renderLlmList();
+
+    modelNameInput.value = "";
+    endpointUrlInput.value = "";
+    apiKeyInput.value = "";
+
+    addLlmPage.style.display = "none";
+    chatPage.style.display = "block";
+    showChatPage();
 });
 
 cancelAddBtn.addEventListener("click", () => {
-addLlmPage.style.display = "none";
-chatPage.style.display = "block";
-showChatPage();
+    addLlmPage.style.display = "none";
+    chatPage.style.display = "block";
+    showChatPage();
 });
 
 // Initial setup

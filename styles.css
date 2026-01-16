@@ -24,8 +24,9 @@ display: flex;
 flex-direction: column;
 }
 
-#clear-storage{
-    background-color: rgba(255, 0, 0, 0.564);
+#clear-storage,
+#add-new-btn{
+    background-color: rgba(255, 0, 0, 0);
 }
 
 #save-llm{
@@ -201,14 +202,19 @@ display: none;
 }
 
 .modal-content {
-background: var(--modal-bg);
-border-radius: 1rem;
-padding: 2rem;
-width: 90%;
-max-width: 500px;
-max-height: 80vh;
-overflow-y: auto;
-box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    background: var(--modal-bg);
+    border-radius: 1rem;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh; /* Limits modal height to 80% of screen */
+    overflow: hidden; /* Prevents the header from scrolling */
 }
 
 .modal-header {
@@ -216,6 +222,10 @@ display: flex;
 justify-content: space-between;
 align-items: center;
 margin-bottom: 1.5rem;
+
+flex-shrink: 0; /* Ensures the header doesn't squash */
+padding: 15px;
+border-bottom: 1px solid #ddd;
 }
 
 .modal-header h2 {
@@ -228,6 +238,11 @@ border: none;
 color: var(--text);
 font-size: 1.5rem;
 cursor: pointer;
+}
+
+.modal-body {
+  overflow-y: auto; /* Only the list will scroll */
+  padding: 0px;
 }
 
 .llm-list {

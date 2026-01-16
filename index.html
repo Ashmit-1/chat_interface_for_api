@@ -88,19 +88,35 @@
           <h2>Manage LLMs</h2>
           <button class="close-btn" id="close-modal">&times;</button>
         </div>
-        <div class="llm-list" id="llm-list"></div>
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 1rem;
-            padding-left: 20px;
-            padding-right: 20px;
-          "
-        >
-          <button id="add-new-btn">Add New LLM</button>
-          <button id="clear-storage">Clear Saved Credentials</button>
+        <div class="modal-body">
+          <div class="llm-list" id="llm-list"></div>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 1rem;
+              padding-left: 20px;
+              padding-right: 20px;
+            "
+          >
+            <button id="add-new-btn">
+              <img
+                src="add_icon.png"
+                alt="Add new llm credentials"
+                srcset=""
+                height="50"
+              />
+            </button>
+            <button id="clear-storage">
+              <img
+                src="dustbin_icon.png"
+                alt="Clear all credentials"
+                srcset=""
+                height="50"
+              />
+            </button>
+          </div>
         </div>
       </div>
     </div>
