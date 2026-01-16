@@ -6,8 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import json
 from openai import AsyncOpenAI
-from ollama import Client
-import asyncio
 
 
 
@@ -40,19 +38,47 @@ app.add_middleware(
 # ---------- Streaming Generator ----------
 async def stream_llm_response(payload : Payload):
     if "ollama" in str(payload.endpoint):
-        client = Client(
-            host="https://ollama.com",
-            headers={'Authorization': 'Bearer ' + str(payload.api_key)}
-        )
-        messages=[m.model_dump() for m in payload.messages]
+        headers = {
+            "Authorization": f"Bearer {payload.api_key}",
+            "Content-Type": "application/json",
+        }
 
-        loop = asyncio.get_event_loop()
-        stream = await loop.run_in_executor(None, client.chat(model=payload.model, messages=messages, stream=True))
-        for part in stream:
-            print(part['message']['content'], end='', flush=True)
-            yield part["message"]["content"]
+        body = {
+            "model": payload.model,
+            "messages": [m.model_dump() for m in payload.messages],
+            "stream": True
+        }
 
-        pass
+        async with httpx.AsyncClient(timeout=None) as client:
+            async with client.stream(
+                "POST",
+                str(payload.endpoint),
+                headers=headers,
+                json=body,
+            ) as response:
+
+                if response.status_code != 200:
+                    raise HTTPException(
+                        status_code=response.status_code,
+                        detail=await response.aread()
+                    )
+
+                async for line in response.aiter_lines():
+                    if not line:
+                        continue
+                    try:
+                        chunk = json.loads(line)
+                        
+                        token = chunk.get("message", {}).get("content")
+                        
+
+                        if token:
+                            # print(token)
+                            yield token
+
+                    except json.JSONDecodeError:
+                        continue
+
     else:
         client = AsyncOpenAI(base_url=str(payload.endpoint), api_key=payload.api_key)
         stream = await client.chat.completions.create(
