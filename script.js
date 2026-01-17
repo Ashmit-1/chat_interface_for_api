@@ -348,8 +348,8 @@ async function sendMessage() {
         { role: "user", content: text }
     ];
 
+    let accumulated = "";
     try {
-        let accumulated = "";
 
         if (endpoint == "http://localhost:11434/api/chat"){
 
@@ -405,7 +405,6 @@ async function sendMessage() {
             }
         }
         else{
-
             const response = await fetch("http://127.0.0.1:8000/chat/stream", {
                 method: 'POST',
                 headers: {
@@ -438,6 +437,9 @@ async function sendMessage() {
                 if (done) break;
                 text += decoder.decode(value);
                 textNode.textContent = text;
+                accumulated = text
+                
+                
                 chat.scrollTop = chat.scrollHeight;
             }
             
@@ -447,11 +449,13 @@ async function sendMessage() {
                     
         }
         hljs.highlightAll();
+
         // Add user message to history
         conversationHistory.push({ role: "user", content: text });
 
         // Add assistant's full response
         conversationHistory.push({ role: "assistant", content: accumulated });
+
 
     } catch (err) {
         contentDiv.textContent = `Error: ${err.message}`;
