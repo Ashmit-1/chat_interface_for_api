@@ -537,6 +537,12 @@ saveLlmBtn.addEventListener("click", () => {
 cancelAddBtn.addEventListener("click", () => {
     addLlmPage.style.display = "none";
     chatPage.style.display = "block";
+    editingIndex = null;
+
+    modelNameInput.value = "";
+    endpointUrlInput.value = "";
+    apiKeyInput.value = "";
+
     showChatPage();
 });
 
