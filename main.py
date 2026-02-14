@@ -26,7 +26,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://127.0.0.1:5500",
-        "http://localhost:5500"
+        "http://localhost:5500", 
+        "https://llmchatui.netlify.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -197,3 +198,9 @@ async def chat(payload: Payload):
             "X-Accel-Buffering": "no"  # Disable buffering in nginx
         }
     )
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    uvicorn.run(app, host="127.0.0.1", port=8080)
