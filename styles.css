@@ -125,19 +125,22 @@ align-items: center;
 flex: 1;
 padding: 0.9rem 1.3rem;
 border: none;
-border-radius: 999px;
+border-radius: 30px;
 background: var(--input-bg);
 color: white;
 font-size: 1.05rem;
 outline: none;
 resize: none;
 height: 48px;
+transition: height 0.5s ease-in-out;
 }
 
 #message-input:focus {
 background: #222233;
 box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
 }
+
+
 
 button {
 height: 48px;
@@ -159,6 +162,14 @@ transform: scale(1.02);
 button:disabled {
 opacity: 0.5;
 cursor: not-allowed;
+}
+
+
+#add-llm-btn{
+    align-self: last baseline;
+}
+#clear-context{
+    align-self: last baseline;
 }
 
 #send-btn {

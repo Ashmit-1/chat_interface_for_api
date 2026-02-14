@@ -23,23 +23,23 @@ let conversationHistory = [];
 
 // Near the top, after declaring llms and currentLLM
 function loadLLMs() {
-  const saved = localStorage.getItem('llmCredentials');
-  if (saved) {
-    try {
-      const data = JSON.parse(saved);
-      llms = data.llms || [];
-      currentLLM = data.current || null;
-      updateCurrentDisplay();
-      renderLlmList();
-    } catch (e) {
-      console.error('Failed to load saved LLMs:', e);
+    const saved = localStorage.getItem('llmCredentials');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            llms = data.llms || [];
+            currentLLM = data.current || null;
+            updateCurrentDisplay();
+            renderLlmList();
+        } catch (e) {
+            console.error('Failed to load saved LLMs:', e);
+        }
     }
-  }
 }
 
 function saveLLMs() {
-  const data = { llms, current: currentLLM };
-  localStorage.setItem('llmCredentials', JSON.stringify(data));
+    const data = { llms, current: currentLLM };
+    localStorage.setItem('llmCredentials', JSON.stringify(data));
 }
 
 // Call load on startup
@@ -48,12 +48,12 @@ loadLLMs();
 // Optional: Clear storage button for security
 // Add <button id="clear-storage">Clear Saved Credentials</button> in HTML
 document.getElementById('clear-storage').addEventListener('click', () => {
-  localStorage.removeItem('llmCredentials');
-  llms = [];
-  currentLLM = null;
-  updateCurrentDisplay();
-  renderLlmList();
-  alert('Credentials cleared from local storage.');
+    localStorage.removeItem('llmCredentials');
+    llms = [];
+    currentLLM = null;
+    updateCurrentDisplay();
+    renderLlmList();
+    alert('Credentials cleared from local storage.');
 });
 
 function updateCurrentDisplay() {
@@ -147,7 +147,7 @@ function editLLM(index) {
     llmModal.style.display = "none";
     chatPage.style.display = "none";
     addLlmPage.style.display = "flex";
-    
+
     // Optional: Change button text to "Update" instead of "Save"
     saveLlmBtn.textContent = "Update LLM";
 }
@@ -156,7 +156,7 @@ function editLLM(index) {
 function deleteLLM(index) {
     if (confirm(`Are you sure you want to delete ${llms[index].model}?`)) {
         llms.splice(index, 1); // Remove from array
-        
+
         // Handle current selection if the deleted one was selected
         if (currentLLM === index) {
             currentLLM = llms.length > 0 ? 0 : null;
@@ -225,29 +225,29 @@ function addMessage(content, isUser = false) {
 }
 
 function addLoading() {
-const wrapper = document.createElement("div");
-wrapper.style.display = "flex";
-wrapper.style.gap = "0.9rem";
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.gap = "0.9rem";
 
-const avatar = document.createElement("div");
-avatar.classList.add("avatar");
-avatar.textContent = "AI";
-wrapper.appendChild(avatar);
+    const avatar = document.createElement("div");
+    avatar.classList.add("avatar");
+    avatar.textContent = "AI";
+    wrapper.appendChild(avatar);
 
-const loading = document.createElement("div");
-loading.classList.add("message", "bot", "loading");
-loading.textContent = "Thinking";
-loading.id = "loading-indicator";
-wrapper.appendChild(loading);
+    const loading = document.createElement("div");
+    loading.classList.add("message", "bot", "loading");
+    loading.textContent = "Thinking";
+    loading.id = "loading-indicator";
+    wrapper.appendChild(loading);
 
-chat.appendChild(wrapper);
-chat.scrollTop = chat.scrollHeight;
-return wrapper;
+    chat.appendChild(wrapper);
+    chat.scrollTop = chat.scrollHeight;
+    return wrapper;
 }
 
 function removeLoading() {
-const loading = document.getElementById("loading-indicator");
-if (loading) loading.parentElement.remove();
+    const loading = document.getElementById("loading-indicator");
+    if (loading) loading.parentElement.remove();
 }
 
 function showChatPage() {
@@ -305,6 +305,7 @@ function showAddLlmPage() {
 //     }
 // }
 
+
 async function sendMessage() {
     const text = input.value.trim();
     if (!text) return;
@@ -335,7 +336,7 @@ async function sendMessage() {
 
     const contentDiv = document.createElement('div');
     contentDiv.classList.add('markdown-body');
-    contentDiv.textContent = ''; 
+    contentDiv.textContent = '';
     wrapper.appendChild(contentDiv);
 
     messageDiv.appendChild(wrapper);
@@ -351,7 +352,7 @@ async function sendMessage() {
     let accumulated = "";
     try {
 
-        if (endpoint == "http://localhost:11434/api/chat"){
+        if (endpoint == "http://localhost:11434/api/chat") {
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -362,10 +363,10 @@ async function sendMessage() {
                 body: JSON.stringify({
                     model: model,
                     messages: messagesToSend,
-                    stream: true                    
+                    stream: true
                 })
             });
-    
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -373,55 +374,55 @@ async function sendMessage() {
             const reader = response.body.getReader()
             const decoder = new TextDecoder()
 
-            
+
 
             while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
+                const { done, value } = await reader.read()
+                if (done) break
 
-            const chunk = decoder.decode(value, { stream: true })
-            console.log(chunk);
-            
-            const lines = chunk.split("\n").filter(Boolean)
+                const chunk = decoder.decode(value, { stream: true })
+                console.log(chunk);
+
+                const lines = chunk.split("\n").filter(Boolean)
 
                 for (const line of lines) {
                     try {
-                    const parsed = JSON.parse(line)
+                        const parsed = JSON.parse(line)
 
-                    if (parsed.done) {
-                        continue
-                    }
+                        if (parsed.done) {
+                            continue
+                        }
 
-                    const token = parsed.message?.content
-                    if (token) {
-                        accumulated += token
-                        contentDiv.innerHTML = marked.parse(accumulated, { breaks: true, gfm: true })
-                        chat.scrollTop = chat.scrollHeight
-                    }
+                        const token = parsed.message?.content
+                        if (token) {
+                            accumulated += token
+                            contentDiv.innerHTML = marked.parse(accumulated, { breaks: true, gfm: true })
+                            chat.scrollTop = chat.scrollHeight
+                        }
                     } catch (e) {
-                    console.debug("Skipping malformed chunk:", line)
+                        console.debug("Skipping malformed chunk:", line)
                     }
                 }
             }
         }
-        else{
-            const response = await fetch("http://127.0.0.1:8000/chat/stream", {
+        else {
+            const response = await fetch("https://fastapi-api-685258470441.asia-south1.run.app/chat/stream", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    endpoint:endpoint,
+                    endpoint: endpoint,
                     api_key: apiKey,
                     model: model,
-                    messages: messagesToSend,                   
+                    messages: messagesToSend,
                 })
             });
-    
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
-            
+
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
 
@@ -431,22 +432,22 @@ async function sendMessage() {
             contentDiv.appendChild(textNode);
 
             let text = "";
-            
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 text += decoder.decode(value);
                 textNode.textContent = text;
                 accumulated = text
-                
-                
+
+
                 chat.scrollTop = chat.scrollHeight;
             }
-            
+
             // after stream ends
             contentDiv.innerHTML = marked.parse(text);
             chat.scrollTop = chat.scrollHeight;
-                    
+
         }
         hljs.highlightAll();
 
@@ -467,26 +468,58 @@ async function sendMessage() {
 
 // Event listeners
 input.addEventListener("input", () => {
-sendBtn.disabled = input.value.trim().length === 0;
+    sendBtn.disabled = input.value.trim().length === 0;
+});
+
+input.addEventListener("input", function () {
+    const textLength = this.value.length;
+    console.log(textLength);
+
+    // Check the length and apply the appropriate class
+    if (textLength > 450) {
+        input.style.height = '240px'
+    }
+    else if (textLength > 400) {
+        input.style.height = '216px'
+    }
+    else if (textLength > 350) {
+        input.style.height = '182px'
+    }
+    else if (textLength > 300) {
+        input.style.height = '168px'
+    }
+    else if (textLength > 250) {
+        input.style.height = '144px'
+    } else if (textLength > 200) {
+        input.style.height = '120px'
+    } else if (textLength > 150) {
+        input.style.height = '96px'
+
+    } else if (textLength > 100) {
+        input.style.height = '72px'
+    } else {
+        input.style.height = '48px'
+    }
+
 });
 
 input.addEventListener("keydown", (e) => {
-if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-}
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
 });
 
 sendBtn.addEventListener("click", sendMessage);
 
 // LLM Management
 addLlmBtn.addEventListener("click", () => {
-renderLlmList();
-llmModal.style.display = "flex";
+    renderLlmList();
+    llmModal.style.display = "flex";
 });
 
 closeModalBtn.addEventListener("click", () => {
-llmModal.style.display = "none";
+    llmModal.style.display = "none";
 });
 
 addNewBtn.addEventListener("click", () => {
@@ -502,7 +535,7 @@ saveLlmBtn.addEventListener("click", () => {
     const apiKey = apiKeyInput.value.trim();
 
     if (!model || !endpoint || !apiKey) {
-        if (!endpoint.includes("localhost")){
+        if (!endpoint.includes("localhost")) {
             alert("Please fill all fields.");
             return;
         }
@@ -549,7 +582,7 @@ cancelAddBtn.addEventListener("click", () => {
 // Initial setup
 updateCurrentDisplay();
 setTimeout(() => {
-addMessage("Welcome! Add an LLM and start your testing journey. 🚀");
+    addMessage("Welcome! Add an LLM and start your testing journey. 🚀");
 }, 400);
 
 document.getElementById('clear-context').addEventListener('click', () => {

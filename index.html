@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat with AI</title>
-    <link rel="icon" href="website_icon.png" />
+    <link rel="icon" href="assets/website_icon.png" />
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link
@@ -24,12 +24,18 @@
         <div class="input-wrapper">
           <button id="add-llm-btn">Add LLM</button>
           <button id="clear-context">Clear Context</button>
-          <input
+          <textarea
+            name="message-input"
+            id="message-input"
+            placeholder="Ask anything..."
+            style="overflow-y: auto"
+          ></textarea>
+          <!-- <input
             type="text"
             id="message-input"
             placeholder="Ask anything..."
             autocomplete="off"
-          />
+          /> -->
           <button id="send-btn" disabled>➤</button>
         </div>
       </div>
@@ -104,7 +110,7 @@
           >
             <button id="add-new-btn">
               <img
-                src="add_icon.png"
+                src="assets/add_icon.png"
                 alt="Add new llm credentials"
                 srcset=""
                 height="50"
@@ -112,7 +118,7 @@
             </button>
             <button id="clear-storage">
               <img
-                src="dustbin_icon.png"
+                src="assets/dustbin_icon.png"
                 alt="Clear all credentials"
                 srcset=""
                 height="50"
